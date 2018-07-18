@@ -1,5 +1,10 @@
 
+#ifndef S_UTILS_METALIST_H
+#define S_UTILS_METALIST_H
+
 #include <cstddef>
+
+namespace S_UTILS {
 
 template<typename... Args>
 class MetaList {
@@ -53,3 +58,5 @@ private:
         static constexpr void _apply_to_all() {}  
     };
 };
+
+} /* namespace S_UTILS */
