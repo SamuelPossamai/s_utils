@@ -1,5 +1,6 @@
 
-TARGET = $(notdir $(basename $(TEST)))
+BINARY_PATH = bin
+TARGET = $(BINARY_PATH)/$(notdir $(basename $(TEST)))
 
 SOURCE_PATH = src
 HEADER_PATH = include
@@ -11,7 +12,6 @@ LIBRARY_PATH =
 
 LIBRARY_FILES =
 
-BINARY_PATH = bin
 
 CPP_DEPENDENCIES = true
 WERROR_SET = true
@@ -63,22 +63,22 @@ endif
 
 all: compile
 
-compile: compile_check create_dir_if_needed $(BINARY_PATH)/$(TARGET)
+compile: compile_check create_dir_if_needed $(TARGET)
 
 run: compile
-	./$(BINARY_PATH)/$(TARGET) $(ARGS)
+	./$(TARGET) $(ARGS)
 
 %.o: %.cpp $(DEPS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
-$(BINARY_PATH)/$(TARGET): $(CODE)
+$(TARGET): $(CODE)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 open:
 	@$(EDITOR) $(SOURCE) $(DEPS) &
 
-debug: debug_flags $(TARGET)
-	$(DBG) ./$(BINARY_PATH)/$(TARGET) $(ARGS)
+debug: debug_flags compile
+	$(DBG) ./$(TARGET) $(ARGS)
 
 debug_flags:
 	$(eval CXXFLAGS += $(DBGFLAGS))
@@ -88,8 +88,8 @@ ifndef TEST
 	$(error TEST file not specified)
 endif
 
-memcheck: $(TARGET)
-	$(MCK) ./$(BINARY_PATH)/$(TARGET) $(ARGS)
+memcheck: compile
+	$(MCK) ./$(TARGET) $(ARGS)
 
 clean:
 	find . -type f -executable -exec rm {} +
