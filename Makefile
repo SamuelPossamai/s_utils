@@ -11,8 +11,7 @@ LIBRARY_PATH =
 
 LIBRARY_FILES =
 
-CXX_VERSION = 17
-OPTIMIZATION = 2
+BINARY_PATH = bin
 
 CPP_DEPENDENCIES = true
 WERROR_SET = true
@@ -37,7 +36,7 @@ DBGFLAGS := -g -O0
 MCK := valgrind
 EDITOR := kate
 
-TEST_FILE = $(TEST_PATH)/$(TEST).cpp
+TEST_FILE = $(TEST_PATH)/$(TEST)_test.cpp
 
 DEPS := $(shell find $(HEADER_PATH) -type f -name '*.h')
 ifeq ($(CPP_DEPENDENCIES), true)
@@ -60,26 +59,26 @@ ifeq ($(WERROR_SET), true)
 CXX_FLAGS += -Werror
 endif
 
-.PHONY: all compile run open debug debug_flags memcheck clean compile_check
+.PHONY: all compile run open debug debug_flags memcheck clean compile_check create_dir_if_needed
 
 all: compile
 
-compile: compile_check $(TARGET)
+compile: compile_check create_dir_if_needed $(BINARY_PATH)/$(TARGET)
 
 run: compile
-	./$(TARGET) $(ARGS)
+	./$(BINARY_PATH)/$(TARGET) $(ARGS)
 
 %.o: %.cpp $(DEPS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
-$(TARGET): $(CODE)
+$(BINARY_PATH)/$(TARGET): $(CODE)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 open:
 	@$(EDITOR) $(SOURCE) $(DEPS) &
 
 debug: debug_flags $(TARGET)
-	$(DBG) ./$(TARGET) $(ARGS)
+	$(DBG) ./$(BINARY_PATH)/$(TARGET) $(ARGS)
 
 debug_flags:
 	$(eval CXXFLAGS += $(DBGFLAGS))
@@ -90,13 +89,12 @@ ifndef TEST
 endif
 
 memcheck: $(TARGET)
-	$(MCK) ./$(TARGET) $(ARGS)
+	$(MCK) ./$(BINARY_PATH)/$(TARGET) $(ARGS)
 
 clean:
 	find . -type f -executable -exec rm {} +
 	find . -type f -name '*.o' -exec rm {} +
 
-
-
-
+create_dir_if_needed:
+	@mkdir -p $(SOURCE_PATH) $(HEADER_PATH) $(TEST_PATH) $(BINARY_PATH)
 
