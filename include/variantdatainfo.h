@@ -2,6 +2,8 @@
 #ifndef S_UTILS_VARIANTDATAINFO_H
 #define S_UTILS_VARIANTDATAINFO_H
 
+#include <iostream>
+
 #include "variant.h"
 
 namespace sutils {
@@ -61,6 +63,8 @@ bool isType(const VariantDataInfo::iterator& it) {
 }
 
 } /* namespace variantdatainfo */
+
+std::ostream& operator<<(std::ostream& os, const std::map<std::string, Variant>& vdi);
 
 } /* namespace sutils */
 

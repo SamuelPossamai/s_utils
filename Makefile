@@ -53,21 +53,21 @@ endif
 CXXFLAGS += -std=c++$(CXX_VERSION) -O$(OPTIMIZATION) $(addprefix -I, $(INCLUDE_PATH))
 LDFLAGS += $(addprefix -L, $(LIBRARY_PATH)) $(addprefix -l, $(LIBRARY_FILES))
 
-ifeq ($(WERROR_SET), true)
+ifeq ($(WERROR_SET),true)
 CXX_FLAGS += -Werror
 endif
 
 CXXFLAGS += $(ADD_CXXFLAGS)
 LDFLAGS += $(ADD_LDFLAGS)
 
-.PHONY: all compile run open debug debug_flags memcheck clean compile_check create_dir_if_needed
+.PHONY: all compile run open debug debug_flags memcheck clean compile_check create_dir_if_needed static_lib create_dyn_lib dyn_lib add_dyn_lib_flag
 
 all: compile
 
 ifdef TEST
-compile: $(TARGET)
+compile: create_dir_if_needed $(TARGET)
 else
-compile: static_lib
+compile: create_dir_if_needed static_lib
 endif
 
 run: compile
@@ -76,7 +76,7 @@ run: compile
 %.o: %.cpp $(DEPS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
-$(TARGET): create_dir_if_needed $(CODE)
+$(TARGET): $(CODE)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 debug: debug_flags compile

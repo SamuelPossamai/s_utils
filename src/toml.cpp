@@ -117,6 +117,51 @@ static void parseLine(std::map<std::string, Variant>& out,
 
     if(stripped_str.empty()) return;
 
+    if(stripped_str.size() >= 2) {
+
+        if(stripped_str[0] == '[' && stripped_str[1] == '[') {
+
+            if(stripped_str[stripped_str.size() - 1] != ']' || stripped_str[stripped_str.size() - 2] != ']') {
+
+                throw ReadingError("Expected ']]' at the end of the line at line " + std::to_string(current_line));
+            }
+
+            stripped_str.pop_back();
+            stripped_str.pop_back();
+            stripped_str.erase(stripped_str.begin(), stripped_str.begin() + 2);
+
+            std::vector<std::string> to_sp;
+            std::vector<std::pair<std::string, std::string> > not_inside = {{"\"", "\""}, {"'", "'"}};
+            if(!split(to_sp, stripped_str, ".", not_inside, 1)) throw ReadingError("Error at line " + std::to_string(current_line));
+            if(to_sp.empty()) throw ReadingError("Error at line " + std::to_string(current_line));
+
+            if(to_sp.size() == 1) {
+
+                Variant& v = out[stripped_str];
+
+                if(v.valid()) {
+
+                    if(!v.isList()) throw ReadingError("Error at line " + std::to_string(current_line));
+                }
+                else {
+
+                    v = VariantList();
+                }
+
+                auto& v_list = v.get<VariantList>();
+                v_list.push_back(VariantMap());
+
+                current_table = &v_list.back();
+            }
+            else {
+
+                current_table = findTable(out, to_sp[0], current_line);
+            }
+
+            return;
+        }
+    }
+
     if(stripped_str.front() == '[') {
 
         if(stripped_str.back() != ']') {

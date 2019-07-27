@@ -1,7 +1,9 @@
 
 #include "variantdatainfo.h"
 
-namespace sutils::variantdatainfo {
+namespace sutils {
+
+namespace variantdatainfo {
 
 std::pair<VariantDataInfo::iterator, bool> defaultsTo(VariantDataInfo& info, const std::string& str, const Variant& v) {
 
@@ -37,4 +39,25 @@ bool numberToReal(const VariantDataInfo::iterator& it) {
     return false;
 }
 
-} /* namespace sutils::variantdatainfo */
+} /* namespace variantdatainfo */
+
+std::ostream& operator<<(std::ostream& os, const std::map<std::string, Variant>& vdi) {
+
+    os << '{';
+
+    if(!vdi.empty()) {
+
+        os << '\n';
+
+        for(auto&& [key, value]: vdi) {
+
+            std::cout << "\t\"" << key << "\": " << value << '\n';
+        }
+    }
+
+    os << '}';
+
+    return os;
+}
+
+} /* namespace sutils */
