@@ -12,7 +12,6 @@ LIBRARY_PATH =
 
 LIBRARY_FILES =
 
-
 CPP_DEPENDENCIES = true
 WERROR_SET = true
 
@@ -21,7 +20,7 @@ TARGET = a.out
 endif
 
 ifndef CXX_VERSION
-CXX_VERSION = 11
+CXX_VERSION = 1z
 endif
 
 ifndef OPTIMIZATION
@@ -29,8 +28,8 @@ OPTIMIZATION = 2
 endif
 
 CXX := g++
-CXXFLAGS := -Wall -Wshadow -Wextra
-LDFLAGS := 
+CXXFLAGS := -Wall -Wshadow
+LDFLAGS :=
 DBG := gdb
 DBGFLAGS := -g -O0
 MCK := valgrind
