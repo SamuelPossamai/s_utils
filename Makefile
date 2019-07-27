@@ -1,6 +1,10 @@
 
 BINARY_PATH = bin
+ifdef TEST
 TARGET = $(BINARY_PATH)/$(notdir $(basename $(TEST)))
+else
+TARGET = $(BINARY_PATH)/sutils
+endif
 
 SOURCE_PATH = src
 HEADER_PATH = include
@@ -14,10 +18,6 @@ LIBRARY_FILES =
 
 CPP_DEPENDENCIES = true
 WERROR_SET = true
-
-ifeq ($(TARGET),)
-TARGET = a.out
-endif
 
 ifndef CXX_VERSION
 CXX_VERSION = 1z
@@ -33,7 +33,6 @@ LDFLAGS :=
 DBG := gdb
 DBGFLAGS := -g -O0
 MCK := valgrind
-EDITOR := kate
 
 TEST_FILE = $(TEST_PATH)/$(TEST)_test.cpp
 
@@ -58,11 +57,18 @@ ifeq ($(WERROR_SET), true)
 CXX_FLAGS += -Werror
 endif
 
+CXXFLAGS += $(ADD_CXXFLAGS)
+LDFLAGS += $(ADD_LDFLAGS)
+
 .PHONY: all compile run open debug debug_flags memcheck clean compile_check create_dir_if_needed
 
 all: compile
 
-compile: compile_check create_dir_if_needed $(TARGET)
+ifdef TEST
+compile: $(TARGET)
+else
+compile: static_lib
+endif
 
 run: compile
 	./$(TARGET) $(ARGS)
@@ -70,11 +76,8 @@ run: compile
 %.o: %.cpp $(DEPS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
-$(TARGET): $(CODE)
+$(TARGET): create_dir_if_needed $(CODE)
 	$(CXX) -o $@ $^ $(LDFLAGS)
-
-open:
-	@$(EDITOR) $(SOURCE) $(DEPS) &
 
 debug: debug_flags compile
 	$(DBG) ./$(TARGET) $(ARGS)
@@ -82,18 +85,25 @@ debug: debug_flags compile
 debug_flags:
 	$(eval CXXFLAGS += $(DBGFLAGS))
 
-compile_check:
-ifndef TEST
-	$(error TEST file not specified)
-endif
-
 memcheck: compile
 	$(MCK) ./$(TARGET) $(ARGS)
 
 clean:
-	find . -type f -executable -exec rm {} +
+	find $(BINARY_PATH) -type f -executable -exec rm {} +
+	find $(BINARY_PATH) -type f -name '*.a' -exec rm {} +
+	find $(BINARY_PATH) -type f -name '*.so' -exec rm {} +
 	find . -type f -name '*.o' -exec rm {} +
 
 create_dir_if_needed:
 	@mkdir -p $(SOURCE_PATH) $(HEADER_PATH) $(TEST_PATH) $(BINARY_PATH)
 
+static_lib: $(CODE)
+	ar rcs $(TARGET).a $^
+
+create_dyn_lib: $(CODE)
+	gcc -shared -o $(TARGET).so $^
+
+dyn_lib: add_dyn_lib_flag create_dyn_lib
+
+add_dyn_lib_flag:
+	$(eval CXXFLAGS += -fPIC)
