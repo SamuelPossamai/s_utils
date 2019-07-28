@@ -1,9 +1,21 @@
 
-#include <algorithm>
-
 #include "stringutils.h"
 
 namespace sutils::stringutils {
+
+void splitSingle(std::string& f, std::string& s, char c, std::string::const_iterator begin, std::string::const_iterator end) {
+
+    auto it = std::find(begin, end, c);
+
+    if(it == end) return;
+
+    s.assign(it + 1, end);
+
+    if(f.cbegin() == begin) {
+        f.resize(std::string::size_type(std::distance(begin, it)));
+    }
+    else f.assign(begin, it);
+}
 
 void splitSingle(std::string& f, std::string& s, const std::string& sub) {
 
@@ -15,14 +27,18 @@ void splitSingle(std::string& f, std::string& s, const std::string& sub) {
     f.resize(std::string::size_type(std::distance(f.begin(), it)));
 }
 
-void splitSingle(std::string& f, std::string& s, char c) {
+void rSplitSingle(std::string& f, std::string& s, char c, std::string::const_iterator begin, std::string::const_iterator end) {
 
-    auto it = std::find(f.begin(), f.end(), c);
+    auto it = std::find(std::string::const_reverse_iterator(begin), std::string::const_reverse_iterator(end), c);
 
-    if(it == f.end()) return;
+    if(it.base() == begin) return;
 
-    s.assign(it + 1, f.end());
-    f.resize(std::string::size_type(std::distance(f.begin(), it)));
+    s.assign(it.base() - 1, end);
+
+    if(f.cbegin() == begin) {
+        f.resize(std::string::size_type(std::distance(begin, it.base())) - 2);
+    }
+    else f.assign(begin, it.base() - 2);
 }
 
 void replace(std::string& str, const std::string& o, const std::string& n) {

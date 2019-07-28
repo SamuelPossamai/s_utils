@@ -8,6 +8,47 @@
 
 namespace sutils::stringutils {
 
+template<typename ITER1, typename ITER2, template<typename, typename...> class NotInsideContainer, typename String>
+class FindIterator {
+
+public:
+
+    FindIterator(ITER1 begin, ITER1 end, ITER2 pat_begin, ITER2 pat_end,
+                 const NotInsideContainer<std::pair<String, String> > *not_inside,
+                 bool using_reverse_iterator = false);
+
+    FindIterator(const FindIterator&) = default;
+
+    auto operator *() const { return *_cur; }
+    auto operator->() const { return _cur.operator->(); }
+
+    FindIterator& operator++();
+
+    FindIterator operator++(int) {
+
+        auto before = *this;
+
+        ++(*this);
+
+        return before;
+    }
+
+    const ITER1& base() const { return _cur; }
+    const ITER1 adjustedBase() const { return _using_reverse_iterator ? _cur + std::distance(_pat_begin, _pat_end) : _cur; }
+
+    bool ok() const { return _s_inside.empty() || _cur != _end; }
+
+private:
+
+    ITER1 _cur;
+    ITER1 _end;
+    ITER2 _pat_begin;
+    ITER2 _pat_end;
+    String _s_inside;
+    const NotInsideContainer<std::pair<String, String> >& _not_inside;
+    bool _using_reverse_iterator;
+};
+
 inline bool notBlank(char c) {
 
     return !std::isspace(c);
@@ -25,6 +66,16 @@ bool startsWith(ITER1 b1, ITER1 e1, ITER2 b2, ITER2 e2) {
     }
 
     return b2 == e2;
+}
+
+inline bool startsWith(const std::string& s1, const std::string& s2) {
+
+    return startsWith(s1.begin(), s1.end(), s2.begin(), s2.end());
+}
+
+inline bool endsWith(const std::string& s1, const std::string& s2) {
+
+    return startsWith(s1.rbegin(), s1.rend(), s2.rbegin(), s2.rend());
 }
 
 template<typename String, typename Callable1, typename Callable2>
@@ -65,7 +116,19 @@ inline std::string strip(const std::string& str) {
 
 void splitSingle(std::string& f, std::string& s, const std::string& sub);
 
-void splitSingle(std::string& f, std::string& s, char c);
+void splitSingle(std::string& f, std::string& s, char c, std::string::const_iterator begin, std::string::const_iterator end);
+
+inline void splitSingle(std::string& f, std::string& s, char c) {
+
+    splitSingle(f, s, c, f.begin(), f.end());
+}
+
+void rSplitSingle(std::string& f, std::string& s, char c, std::string::const_iterator begin, std::string::const_iterator end);
+
+inline void rSplitSingle(std::string& f, std::string& s, char c) {
+
+    rSplitSingle(f, s, c, f.begin(), f.end());
+}
 
 inline std::pair<std::string, std::string> splitSingle(const std::string& str, const std::string& sub) {
 
@@ -108,47 +171,19 @@ template<template<typename, typename...> class OutputContainer,
 bool split(OutputContainer<String>& output, const String& str, const String& pat,
            const NotInsideContainer<Pair>& not_inside, std::size_t max = std::numeric_limits<std::size_t>::max()) {
 
-    String s_inside;
     auto beg_it = str.begin();
 
-    std::size_t i = 0;
-    for(auto it = str.begin(); it != str.end(); ++it) {
+    FindIterator f_it(str.cbegin(), str.cend(), pat.cbegin(), pat.cend(), &not_inside);
+    for(std::size_t i = 0; f_it.base() != str.cend() && i < max; ++f_it, ++i) {
 
-        if(s_inside.empty()) {
+        output.push_back(String(beg_it, f_it.base()));
 
-            for(auto&& p : not_inside) {
-
-                auto&& s = p.first;
-
-                if(startsWith(it, str.end(), s.begin(), s.end())) {
-
-                    s_inside = p.second;
-                    break;
-                }
-            }
-
-            if(!s_inside.empty()) continue;
-
-            if(startsWith(it, str.end(), pat.begin(), pat.end())) {
-
-                output.push_back(String(beg_it, it));
-                it += pat.size() - 1;
-                beg_it = it + 1;
-
-                if(i > max) break;
-                i++;
-            }
-        }
-        else if(startsWith(it, str.end(), s_inside.begin(), s_inside.end())) {
-
-            it += s_inside.size() - 1;
-            s_inside.clear();
-        }
+        beg_it = f_it.base() + pat.size();
     }
 
     output.push_back(String(beg_it, str.end()));
 
-    return s_inside.empty();
+    return f_it.ok();
 }
 
 template<template<typename, typename...> class OutputContainer,
@@ -170,6 +205,62 @@ inline void toUpper(std::string& s) {
 }
 
 void replace(std::string& str, const std::string& o, const std::string& n);
+
+template<typename ITER1, typename ITER2, template<typename, typename...> class NotInsideContainer, typename String>
+FindIterator<ITER1, ITER2, NotInsideContainer, String>::FindIterator(ITER1 begin, ITER1 end, ITER2 pat_begin, ITER2 pat_end,
+                                                                     const NotInsideContainer<std::pair<String, String> > *not_inside,
+                                                                     bool using_reverse_iterator) :
+                                                                        _cur(begin), _end(end), _pat_begin(pat_begin), _pat_end(pat_end),
+                                                                        _not_inside(*not_inside), _using_reverse_iterator(using_reverse_iterator) {
+
+    if(!startsWith(_cur, _end, _pat_begin, _pat_end)) ++(*this);
+}
+
+template<typename ITER1, typename ITER2, template<typename, typename...> class NotInsideContainer, typename String>
+FindIterator<ITER1, ITER2, NotInsideContainer, String>& FindIterator<ITER1, ITER2, NotInsideContainer, String>::operator++() {
+
+    _cur += std::distance(_pat_begin, _pat_end);
+
+    for(; _cur != _end; ++_cur) {
+
+        if(_s_inside.empty()) {
+
+            for(auto&& p : _not_inside) {
+
+                if(_using_reverse_iterator) {
+
+                    if(startsWith(_cur, _end, p.second.rbegin(), p.second.rend())) {
+
+                        _s_inside.assign(p.first.rbegin(), p.first.rend());
+                        break;
+                    }
+                }
+                else {
+
+                    if(startsWith(_cur, _end, p.first.begin(), p.first.end())) {
+
+                        _s_inside = p.second;
+                        break;
+                    }
+                }
+            }
+
+            if(!_s_inside.empty()) continue;
+
+            if(startsWith(_cur, _end, _pat_begin, _pat_end)) {
+
+                return *this;
+            }
+        }
+        else if(startsWith(_cur, _end, _s_inside.begin(), _s_inside.end())) {
+
+            _cur += _s_inside.size() - 1;
+            _s_inside.clear();
+        }
+    }
+
+    return *this;
+}
 
 } /* namespace sutils::stringutils */
 
