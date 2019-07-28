@@ -10,7 +10,7 @@ using namespace sutils;
 
 int main() {
 
-    std::fstream file("tests/test.toml");
+    std::fstream file("tests/test2.toml");
 
     auto toml_content = toml::read(file);
 

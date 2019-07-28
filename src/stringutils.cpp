@@ -35,6 +35,8 @@ void replace(std::string& str, const std::string& o, const std::string& n) {
         if(it >= str.rend()) break;
 
         str.replace(it.base(), it.base() + std::string::difference_type(o.size()), n.begin(), n.end());
+
+        ++it;
     }
 }
 

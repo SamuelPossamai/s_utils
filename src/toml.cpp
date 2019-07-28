@@ -155,7 +155,7 @@ static void parseLine(std::map<std::string, Variant>& out,
             }
             else {
 
-                current_table = findTable(out, to_sp[0], current_line);
+                throw ReadingError("Not supported array of tables inside other tables at line " + std::to_string(current_line));
             }
 
             return;
@@ -176,6 +176,15 @@ static void parseLine(std::map<std::string, Variant>& out,
     else parseAssignLine(out, s, reader, current_table, current_line);
 }
 
+static void countBrackets(const std::string& s, std::size_t *b_start, std::size_t *b_end) {
+
+    for(char c: s) {
+
+        if(c == '[') (*b_start)++;
+        else if(c == ']') (*b_end)++;
+    }
+}
+
 std::map<std::string, Variant> read(std::istream& is) {
 
     VariantReaderComponents c;
@@ -183,15 +192,42 @@ std::map<std::string, Variant> read(std::istream& is) {
     std::map<std::string, Variant> out;
 
     std::string str;
+    std::string aux_str;
+    std::string aux2_str;
 
     std::size_t current_line = 1;
 
     Variant *table = nullptr;
 
+    std::size_t b_start = 0;
+    std::size_t b_end = 0;
+
     while(is) {
 
+        b_start = b_end = 0;
+
         std::getline(is, str);
+        splitSingle(str, aux_str, '#');
+
+        std::size_t sum_value = 1;
+
+        countBrackets(str, &b_start, &b_end);
+        while(b_start != b_end && is) {
+
+            std::getline(is, aux_str);
+            splitSingle(aux_str, aux2_str, '#');
+
+            str.push_back(' ');
+
+            countBrackets(aux_str, &b_start, &b_end);
+
+            str += aux_str;
+            sum_value++;
+        }
+
         parseLine(out, str, c.reader, table, current_line++);
+
+        current_line += sum_value;
     }
 
     return out;
