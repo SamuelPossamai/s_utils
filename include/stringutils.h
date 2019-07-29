@@ -173,8 +173,8 @@ bool split(OutputContainer<String>& output, const String& str, const String& pat
 
     auto beg_it = str.begin();
 
-    FindIterator f_it(str.cbegin(), str.cend(), pat.cbegin(), pat.cend(), &not_inside);
-    for(std::size_t i = 0; f_it.base() != str.cend() && i < max; ++f_it, ++i) {
+    FindIterator f_it(str.begin(), str.end(), pat.begin(), pat.end(), &not_inside);
+    for(std::size_t i = 0; f_it.base() != str.end() && i < max; ++f_it, ++i) {
 
         output.push_back(String(beg_it, f_it.base()));
 
@@ -192,6 +192,34 @@ bool split(OutputContainer<String>& output, const String& str, const char *pat,
            const NotInsideContainer<Pair>& not_inside, std::size_t max = std::numeric_limits<std::size_t>::max()) {
 
     return split(output, str, String(pat), not_inside, max);
+}
+
+template<template<typename, typename...> class OutputContainer,
+         template<typename, typename...> class NotInsideContainer, typename String, typename Pair>
+bool rSplit(OutputContainer<String>& output, const String& str, const String& pat,
+           const NotInsideContainer<Pair>& not_inside, std::size_t max = std::numeric_limits<std::size_t>::max()) {
+
+    auto beg_it = str.rbegin();
+
+    FindIterator f_it(str.rbegin(), str.rend(), pat.rbegin(), pat.rend(), &not_inside, true);
+    for(std::size_t i = 0; f_it.base() != str.rend() && i < max; ++f_it, ++i) {
+
+        output.push_back(String(f_it.base().base(), beg_it.base()));
+
+        beg_it = f_it.base() + pat.size();
+    }
+
+    output.push_back(String(str.begin(), beg_it.base()));
+
+    return f_it.ok();
+}
+
+template<template<typename, typename...> class OutputContainer,
+         template<typename, typename...> class NotInsideContainer, typename String, typename Pair>
+bool rSplit(OutputContainer<String>& output, const String& str, const char *pat,
+           const NotInsideContainer<Pair>& not_inside, std::size_t max = std::numeric_limits<std::size_t>::max()) {
+
+    return rSplit(output, str, String(pat), not_inside, max);
 }
 
 inline void toLower(std::string& s) {

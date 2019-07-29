@@ -69,9 +69,9 @@ int main() {
         }
     }
 
-    {
-        std::string str_pat(pat, pat + sizeof(pat)/sizeof(*pat) - 1);
+    std::string str_pat(pat, pat + sizeof(pat)/sizeof(*pat) - 1);
 
+    {
         FindIterator f_it(aux.crbegin(), aux.crend(), str_pat.crbegin(), str_pat.crend(), &not_inside, true);
 
         int i = sizeof(dist_vec)/sizeof(*dist_vec) - 1;
@@ -82,4 +82,35 @@ int main() {
             i--;
         }
     }
+
+    std::vector<std::string> split_out;
+
+    split(split_out, aux, str_pat, not_inside);
+
+    assert(split_out.size() == 6);
+
+    assert(split_out[0] == "");
+    assert(split_out[1] == "asda");
+    assert(split_out[2] == "sdasd");
+    assert(split_out[3] == "asdsadd(as##sadasd#$da)sas$$sadda");
+    assert(split_out[4] == "sasd");
+    assert(split_out[5] == "");
+
+    split_out.clear();
+    rSplit(split_out, aux, str_pat, not_inside);
+
+    assert(split_out.size() == 6);
+
+    assert(split_out[0] == "");
+    assert(split_out[1] == "sasd");
+    assert(split_out[2] == "asdsadd(as##sadasd#$da)sas$$sadda");
+    assert(split_out[3] == "sdasd");
+    assert(split_out[4] == "asda");
+    assert(split_out[5] == "");
+
+    std::cerr << "\033[1;34m" << std::endl;
+
+    std::cout << "Passed all tests :)" << std::endl;
+
+    std::cerr << "\033[0m";
 }
