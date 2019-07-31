@@ -132,7 +132,7 @@ static void parseLine(std::map<std::string, Variant>& out,
 
             std::vector<std::string> to_sp;
             std::vector<std::pair<std::string, std::string> > not_inside = {{"\"", "\""}, {"'", "'"}};
-            if(!split(to_sp, stripped_str, ".", not_inside, 1)) throw ReadingError("Error at line " + std::to_string(current_line));
+            if(!rSplit(to_sp, stripped_str, ".", not_inside, 1)) throw ReadingError("Error at line " + std::to_string(current_line));
             if(to_sp.empty()) throw ReadingError("Error at line " + std::to_string(current_line));
 
             if(to_sp.size() == 1) {
@@ -155,7 +155,25 @@ static void parseLine(std::map<std::string, Variant>& out,
             }
             else {
 
-                throw ReadingError("Not supported array of tables inside other tables at line " + std::to_string(current_line));
+                Variant *table = findTable(out, to_sp[1], current_line);
+
+                if(!table->isMap()) throw ReadingError("Error at line " + std::to_string(current_line));
+
+                auto& v = table->get<Variant::Map>()[to_sp[0]];
+
+                if(v.valid()) {
+
+                    if(!v.isList()) throw ReadingError("Error at line " + std::to_string(current_line));
+                }
+                else {
+
+                    v = VariantList();
+                }
+
+                auto& v_list = v.get<VariantList>();
+                v_list.push_back(VariantMap());
+
+                current_table = &v_list.back();
             }
 
             return;
