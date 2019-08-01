@@ -60,6 +60,8 @@ endif
 CXXFLAGS += $(ADD_CXXFLAGS)
 LDFLAGS += $(ADD_LDFLAGS)
 
+LIB_TARGET := $(dir $(TARGET))lib$(notdir $(TARGET))
+
 .PHONY: all compile run open debug debug_flags memcheck clean compile_check create_dir_if_needed static_lib create_dyn_lib dyn_lib add_dyn_lib_flag
 
 all: compile
@@ -98,10 +100,10 @@ create_dir_if_needed:
 	@mkdir -p $(SOURCE_PATH) $(HEADER_PATH) $(TEST_PATH) $(BINARY_PATH)
 
 static_lib: $(CODE)
-	ar rcs $(TARGET).a $^
+	ar rcs $(LIB_TARGET).a $^
 
 create_dyn_lib: $(CODE)
-	gcc -shared -o $(TARGET).so $^
+	gcc -shared -o $(LIB_TARGET).so $^
 
 dyn_lib: add_dyn_lib_flag create_dyn_lib
 
