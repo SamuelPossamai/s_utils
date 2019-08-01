@@ -106,6 +106,23 @@ static void parseAssignLine(std::map<std::string, Variant>& out,
     assignValue(out, to_sp[0], current_table, val, current_line);
 }
 
+static void appendTableList(Variant *&current_table, Variant& dest_table, std::size_t current_line) {
+
+    if(dest_table.valid()) {
+
+        if(!dest_table.isList()) throw ReadingError("Error at line " + std::to_string(current_line));
+    }
+    else {
+
+        dest_table = VariantList();
+    }
+
+    auto& v_list = dest_table.get<VariantList>();
+    v_list.push_back(VariantMap());
+
+    current_table = &v_list.back();
+}
+
 static void parseLine(std::map<std::string, Variant>& out,
                       const std::string& s, const VariantReader& reader,
                       Variant *&current_table,
@@ -139,19 +156,7 @@ static void parseLine(std::map<std::string, Variant>& out,
 
                 Variant& v = out[stripped_str];
 
-                if(v.valid()) {
-
-                    if(!v.isList()) throw ReadingError("Error at line " + std::to_string(current_line));
-                }
-                else {
-
-                    v = VariantList();
-                }
-
-                auto& v_list = v.get<VariantList>();
-                v_list.push_back(VariantMap());
-
-                current_table = &v_list.back();
+                appendTableList(current_table, v, current_line);
             }
             else {
 
@@ -161,19 +166,7 @@ static void parseLine(std::map<std::string, Variant>& out,
 
                 auto& v = table->get<Variant::Map>()[to_sp[0]];
 
-                if(v.valid()) {
-
-                    if(!v.isList()) throw ReadingError("Error at line " + std::to_string(current_line));
-                }
-                else {
-
-                    v = VariantList();
-                }
-
-                auto& v_list = v.get<VariantList>();
-                v_list.push_back(VariantMap());
-
-                current_table = &v_list.back();
+                appendTableList(current_table, v, current_line);
             }
 
             return;
