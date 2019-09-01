@@ -99,13 +99,13 @@ clean:
 create_dir_if_needed:
 	@mkdir -p $(SOURCE_PATH) $(HEADER_PATH) $(TEST_PATH) $(BINARY_PATH)
 
-static_lib: $(CODE)
-	ar rcs $(LIB_TARGET).a $^
+static_lib: create_dir_if_needed $(CODE)
+	ar rcs $(LIB_TARGET).a $(CODE)
 
 create_dyn_lib: $(CODE)
 	gcc -shared -o $(LIB_TARGET).so $^
 
-dyn_lib: add_dyn_lib_flag create_dyn_lib
+dyn_lib: create_dir_if_needed add_dyn_lib_flag create_dyn_lib
 
 add_dyn_lib_flag:
 	$(eval CXXFLAGS += -fPIC)
