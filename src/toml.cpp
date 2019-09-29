@@ -1,4 +1,6 @@
 
+#include <iostream>
+
 #include "stringutils.h"
 #include "variantreader.h"
 #include "toml.h"
@@ -34,11 +36,26 @@ const char *ReadingError::what() const noexcept {
     return _error_message.c_str();
 }
 
-static void advanceTables(const std::vector<std::string>& to, Variant *&current, std::size_t line) {
+static void advanceTables(const std::vector<std::string>& to, Variant *&current,
+                          std::size_t line) {
 
     for(auto&& s : to) {
 
-        if(current->valid() && !current->isMap()) throw ReadingError("Error at line " + std::to_string(line));
+        if(current->valid() && !current->isMap() && !current->isList()) {
+
+            throw ReadingError("Cannot create a table named '" + s +
+                               "' at line " + std::to_string(line));
+        }
+
+        if(current->isList()) {
+
+            auto& cur_list = current->get<Variant::List>();
+
+            if(cur_list.empty()) throw ReadingError("Internal error at line " +
+                                                    std::to_string(line));
+
+            current = &cur_list.back();
+        }
 
         if(!current->valid()) *current = VariantMap();
 
