@@ -249,7 +249,7 @@ FindIterator<ITER1, ITER2, NotInsideContainer, String>& FindIterator<ITER1, ITER
 
     _cur += std::distance(_pat_begin, _pat_end);
 
-    for(; _cur != _end; ++_cur) {
+    for(; _cur < _end; ++_cur) {
 
         if(_s_inside.empty()) {
 
@@ -286,6 +286,8 @@ FindIterator<ITER1, ITER2, NotInsideContainer, String>& FindIterator<ITER1, ITER
             _s_inside.clear();
         }
     }
+
+    if(_cur > _end) _cur = _end;
 
     return *this;
 }
