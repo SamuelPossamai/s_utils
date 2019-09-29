@@ -245,7 +245,7 @@ Variant::operator Integer() const {
 
 Variant::operator Real() const {
 
-    if(isType<Integer>()) return Real(get<Real>());
+    if(isType<Integer>()) return Real(get<Integer>());
     if(isType<bool>()) return Real(get<bool>());
 
     return get<Real>();
