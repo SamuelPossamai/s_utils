@@ -13,7 +13,11 @@ namespace sutils::toml {
 
     public:
 
-        ReadingError(const std::string& error_message) : _error_message("toml::ReadingError" + error_message) {}
+        ReadingError(const std::string& error_message) :
+            _error_message("toml::ReadingError: " + error_message) {}
+
+        ReadingError(const std::string& error_message, std::size_t line) :
+            ReadingError(error_message + " at line " + std::to_string(line)) {}
 
         virtual ~ReadingError() = default;
 
